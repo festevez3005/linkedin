@@ -159,4 +159,7 @@ if st.button("🚀 Analizar Ecosistema"):
 # Footer
 st.markdown(f"""
     <div class="footer">
-    Herramienta impulsada por
+    Herramienta impulsada por <b>Crawla Colab</b><br>
+    Potenciando el ecosistema digital desde <a href="https://colab.crawla.agency" target="_blank">colab.crawla.agency</a>
+    </div>
+    """, unsafe_allow_html=True)
