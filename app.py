@@ -86,7 +86,7 @@ def get_ai_recommendations(query, profiles, lang, api_key):
 
 # Header con Branding de Crawla Colab
 st.image("https://colab.crawla.agency/wp-content/uploads/2025/08/crawla-colab-logo.webp", width=180) 
-st.title("LinkedIn Ecosystem Optimizer")
+st.title("La mano visible de Linkedin")
 st.markdown("### Optimización integral para el mercado digital actual")
 
 # Sidebar
