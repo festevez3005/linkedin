@@ -5,7 +5,7 @@ import json
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
-    page_title="LinkedIn Ecosystem Optimizer | Crawla Colab",
+    page_title="La mano visible de Linkedin | Crawla Colab",
     page_icon="🚀",
     layout="wide"
 )
@@ -85,7 +85,7 @@ def get_ai_recommendations(query, profiles, lang, api_key):
 # --- INTERFAZ ---
 
 # Header con Branding de Crawla Colab
-st.image("https://colab.crawla.agency/wp-content/uploads/2023/10/Logo-Crawla-Colab.png", width=180) 
+st.image("https://colab.crawla.agency/wp-content/uploads/2025/08/crawla-colab-logo.webp", width=180) 
 st.title("LinkedIn Ecosystem Optimizer")
 st.markdown("### Optimización integral para el mercado digital actual")
 
@@ -126,7 +126,7 @@ if st.button("🚀 Analizar Ecosistema"):
             results = get_serp_data(role, PAISES[selected_country], IDIOMAS[selected_lang], SERPER_API)
             
             if results:
-                tab1, tab2 = st.tabs(["📊 Análisis de Visibilidad", "💡 Estrategia Inclusiva"])
+                tab1, tab2 = st.tabs(["📊 Análisis de Visibilidad", "💡 Estrategia"])
                 
                 with tab1:
                     st.markdown(f"**Top Perfiles detectados por Google en {selected_country}:**")
