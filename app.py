@@ -1,136 +1,142 @@
 import streamlit as st
 import requests
 import openai
-import pandas as pd
+import json
 
-# Configuración de la interfaz
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
-    page_title="LinkedIn Ecosystem Optimizer",
-    page_icon="🚀",
+    page_title="LinkedIn Ecosystem Optimizer | Crawla Colab",
+    page_icon="🔎",
     layout="wide"
 )
 
-# Estilos personalizados
+# --- ESTILOS Y BRANDING ---
 st.markdown("""
     <style>
-    .main { background-color: #f5f7f9; }
-    .stButton>button { width: 100%; background-color: #0077b5; color: white; }
+    .main { background-color: #f8f9fa; }
+    .stButton>button { background-color: #0077b5; color: white; border-radius: 5px; }
+    .footer { text-align: center; margin-top: 50px; color: #666; font-size: 0.8em; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA ---
+# --- DICCIONARIOS DE CONFIGURACIÓN ---
+PAISES = {
+    "Global": "gl", "España": "es", "México": "mx", "Colombia": "co", 
+    "Argentina": "ar", "Chile": "cl", "Perú": "pe", "EE.UU (Español)": "us",
+    "Ecuador": "ec", "Panamá": "pa", "Uruguay": "uy"
+}
 
-def get_google_linkedin_data(query, api_key):
-    """Consulta a Serper.dev para ver quién domina el SEO de LinkedIn"""
+IDIOMAS = {
+    "Español": "es",
+    "Inglés": "en",
+    "Portugués": "pt"
+}
+
+# --- FUNCIONES CORE ---
+
+def get_serp_data(query, country_code, lang_code, api_key):
     url = "https://google.serper.dev/search"
-    # El 'dork' busca específicamente perfiles personales
-    payload = {
+    payload = json.dumps({
         "q": f'site:linkedin.com/in "{query}"',
-        "num": 6
-    }
-    headers = {
-        'X-API-KEY': api_key,
-        'Content-Type': 'application/json'
-    }
+        "gl": country_code,
+        "hl": lang_code,
+        "num": 7
+    })
+    headers = {'X-API-KEY': api_key, 'Content-Type': 'application/json'}
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.request("POST", url, headers=headers, data=payload)
         return response.json().get('organic', [])
-    except Exception as e:
-        st.error(f"Error en búsqueda: {e}")
+    except:
         return []
 
-def get_ai_analysis(query, profiles_data, api_key):
-    """Usa OpenAI para generar keywords y sugerencias de titulares"""
+def get_ai_recommendations(query, profiles, lang, api_key):
     client = openai.OpenAI(api_key=api_key)
-    
-    # Preparamos un resumen de los snippets de Google para la IA
-    benchmarking = "\n".join([f"- {p.get('title')}: {p.get('snippet')}" for p in profiles_data])
+    context = "\n".join([f"- {p.get('title')}: {p.get('snippet')}" for p in profiles])
     
     prompt = f"""
-    Como experto en SEO de LinkedIn y Marca Personal:
-    1. Analiza estos resultados actuales de Google para '{query}':
-    {benchmarking}
+    Eres un experto en SEO de LinkedIn. Idioma de respuesta: {lang}.
+    Analiza estos resultados de Google para la búsqueda '{query}':
+    {context}
     
-    2. Genera una lista de 12 palabras clave (Keywords) semánticas esenciales.
-    3. Propón 3 opciones de 'Titular' (Headline) que mezclen SEO y atracción.
-    
-    Responde en formato JSON con las llaves: 'keywords' (lista) y 'titulares' (lista).
+    Proporciona:
+    1. 10 Keywords de alto impacto para el perfil.
+    2. 3 Titulares (Headlines) optimizados.
+    Responde estrictamente en formato JSON con llaves 'keywords' (lista) y 'titulares' (lista).
     """
     
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={ "type": "json_object" }
-        )
-        import json
-        return json.loads(response.choices[0].message.content)
-    except Exception as e:
-        st.error(f"Error en IA: {e}")
-        return None
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        response_format={ "type": "json_object" }
+    )
+    return json.loads(response.choices[0].message.content)
 
-# --- INTERFAZ DE USUARIO ---
+# --- INTERFAZ ---
 
-st.title("🚀 LinkedIn Ecosystem Optimizer")
-st.subheader("Optimiza tu perfil basándote en datos reales de Google")
+# Header con Branding
+st.image("https://colab.crawla.agency/wp-content/uploads/2023/10/Logo-Crawla-Colab.png", width=200) # Ajustar URL si es necesario
+st.title("LinkedIn Ecosystem Optimizer")
+st.info("Esta es una herramienta exclusiva de **[Crawla Colab](https://colab.crawla.agency)** para el posicionamiento integral en el ecosistema digital.")
 
-# Sidebar para configuración
+# Sidebar de Configuración
 with st.sidebar:
-    st.header("⚙️ Configuración")
-    st.info("Estas claves se pueden configurar de forma interna para que el alumno no las vea.")
-    # Si usas st.secrets, puedes comentar estas líneas:
-    user_openai_key = st.text_input("OpenAI API Key", type="password")
-    user_serper_key = st.text_input("Serper API Key (Google)", type="password")
+    st.header("📍 Segmentación")
+    selected_country = st.selectbox("País de búsqueda", list(PAISES.keys()))
+    selected_lang = st.selectbox("Idioma de los resultados", list(IDIOMAS.keys()))
     
     st.divider()
-    st.markdown("### ¿Cómo funciona?")
-    st.write("1. Buscamos qué perfiles premia Google para tu cargo.")
-    st.write("2. Analizamos sus palabras clave.")
-    st.write("3. La IA te sugiere cómo ganarlos.")
+    st.markdown("### 📚 Recursos del Curso")
+    # REEMPLAZA ESTE LINK CON TU LINK REAL
+    st.link_button("Acceder al Workbook de LinkedIn", "https://tu-link-al-workbook.com", use_container_width=True)
+    st.caption("Usa el workbook para documentar los hallazgos de esta herramienta.")
 
-# Input principal
-col_in1, col_in2 = st.columns([2, 1])
-with col_in1:
-    target_role = st.text_input("¿Qué cargo o rol quieres posicionar?", placeholder="Ej: Especialista en Marketing Digital")
+# Cuerpo Principal
+role = st.text_input("Ingresa el cargo o nicho a analizar:", placeholder="Ej: Especialista en Ciberseguridad")
 
-if st.button("Ejecutar Análisis de Ecosistema"):
-    # Validación de llaves (usando inputs o secretos de Streamlit)
-    api_o = user_openai_key or st.secrets.get("OPENAI_API_KEY")
-    api_s = user_serper_key or st.secrets.get("SERPER_API_KEY")
+if st.button("Analizar Ecosistema Digital"):
+    # Obtener llaves desde Secrets de Streamlit
+    try:
+        OPENAI_API = st.secrets["OPENAI_API_KEY"]
+        SERPER_API = st.secrets["SERPER_API_KEY"]
+    except:
+        st.error("Error: Las API Keys no están configuradas en los Secrets de Streamlit.")
+        st.stop()
 
-    if not api_o or not api_s:
-        st.warning("Faltan las API Keys para continuar.")
-    else:
-        with st.spinner("Analizando el mercado digital..."):
-            # 1. Obtener datos de Google
-            profiles = get_google_linkedin_data(target_role, api_s)
+    if role:
+        with st.spinner(f"Analizando perfiles en {selected_country}..."):
+            # 1. Búsqueda Geocalizada
+            results = get_serp_data(role, PAISES[selected_country], IDIOMAS[selected_lang], SERPER_API)
             
-            if profiles:
-                # 2. Análisis de IA
-                analysis = get_ai_analysis(target_role, profiles, api_o)
+            if results:
+                col1, col2 = st.columns([1, 1])
                 
-                # 3. Mostrar Resultados
-                tab1, tab2 = st.tabs(["📊 Competencia en Google", "💡 Optimización IA"])
+                with col1:
+                    st.subheader(f"🔝 Líderes en {selected_country}")
+                    for r in results:
+                        with st.expander(r['title'][:60]):
+                            st.write(r.get('snippet'))
+                            st.link_button("Ver Perfil", r['link'])
                 
-                with tab1:
-                    st.write("Estos son los perfiles que aparecen primero en motores de búsqueda:")
-                    for p in profiles:
-                        with st.container():
-                            st.markdown(f"**[{p['title']}]({p['link']})**")
-                            st.caption(p.get('snippet', 'Sin descripción'))
-                            st.divider()
-                
-                with tab2:
-                    if analysis:
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            st.success("✅ Palabras Clave Recomendadas")
-                            st.write(", ".join(analysis['keywords']))
-                            st.info("Tip: Incluye estas palabras en tu sección 'Acerca de'.")
-                        
-                        with c2:
-                            st.success("✍️ Sugerencias de Titular (Headline)")
-                            for t in analysis['titulares']:
-                                st.code(t, language=None)
+                with col2:
+                    # 2. Análisis IA
+                    analysis = get_ai_recommendations(role, results, selected_lang, OPENAI_API)
+                    st.subheader("💡 Estrategia de Optimización")
+                    
+                    st.markdown("**Keywords Recomendadas:**")
+                    st.info(", ".join(analysis['keywords']))
+                    
+                    st.markdown("**Sugerencias de Headline:**")
+                    for t in analysis['titulares']:
+                        st.code(t, language=None)
             else:
-                st.error("No se encontraron resultados. Intenta con un cargo más genérico.")
+                st.warning("No se encontraron resultados específicos para esa combinación. Intenta ampliar la búsqueda.")
+    else:
+        st.warning("Por favor ingresa un cargo.")
+
+# Footer
+st.markdown("""
+    <div class="footer">
+    Herramienta desarrollada por Crawla Colab © 2026<br>
+    <a href="https://colab.crawla.agency">Visitar Crawla Colab</a>
+    </div>
+    """, unsafe_allow_html=True)
